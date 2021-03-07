@@ -1,5 +1,5 @@
 const ws = new WebSocket("ws://localhost:3000");
-
+console.log(title);
 ws.onmessage = (msg) => {
 	renderMessages(JSON.parse(msg.data));
 };
