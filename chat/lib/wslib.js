@@ -11,7 +11,7 @@ const wsConnection = (server) => {
 		sendMessages();
 
 		ws.on("message", (message) => {
-			messages.push(message);
+			messages.push(JSON.parse(message));
 			sendMessages();
 		});
 	});
