@@ -5,11 +5,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Listado de mensajes</title>
+
 </head>
 
 <body>
     <h1>Mensajes</h1>
-    <script src="./javascripts/messages.js"></script>
+    <div id="messages"></div>
+    <form id="form" method="post">
+        <label for="author">Author
+            <input type="text" id="author" />
+        </label>
+
+        <label for="message">Message
+            <input type="text" id="message" />
+        </label>
+
+
+        <input type="submit" value="submit" />
+
+        <script src="/javascripts/messages.js"></script>
 </body>
 
 </html>

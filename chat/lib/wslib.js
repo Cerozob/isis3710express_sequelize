@@ -1,5 +1,4 @@
 const WebSocket = require("ws");
-
 const clients = [];
 const messages = [];
 
@@ -9,13 +8,12 @@ const wsConnection = (server) => {
 	wss.on("connection", (ws) => {
 		clients.push(ws);
 		sendMessages();
-
 		ws.on("message", (message) => {
+			console.log(message);
 			messages.push(JSON.parse(message));
 			sendMessages();
 		});
 	});
-
 	const sendMessages = () => {
 		clients.forEach((client) => client.send(JSON.stringify(messages)));
 	};

@@ -2,22 +2,27 @@ var express = require("express");
 var router = express.Router();
 const fs = require("fs");
 var messagelist = new Map(); //clave: timestamp, valor: objeto mensaje
+const htmlsPath = "./public/";
+const path = require("path");
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-	res.render("index", { title: "Express" });
+	res.render(htmlsPath + "index");
 });
 
 router.get("/chat/api/messages", function (req, res, next) {
 	//TODO: mostrar todos los mensajes
-	res.render("messages", { messages: messagelist });
+	if (messagelist.size !== 0) {
+		loadFiles();
+	}
+	res.sendFile(path.resolve(__dirname, "../public/messages.html"));
 });
 
 router.get("/chat/api/messages/:ts", function (req, res, next) {
 	//TODO: mostrar el mensaje con el timestamp req.params.ts
 	let msgts = req.params.ts;
 	if (messagelist.has(msgts)) {
-		res.render("singleMessage", { msg: messagelist.get(msgts) });
+		res.send(JSON.stringify(messagelist.get(msgts)));
 	} else {
 		res.status(404).send("mensaje no encontrado");
 	}
@@ -25,14 +30,18 @@ router.get("/chat/api/messages/:ts", function (req, res, next) {
 
 router.post("/chat/api/messages", function (req, res, next) {
 	//TODO: crear un mensaje
-
-	console.log(req.body);
+	saveMessage(req.body);
+	res.status(200).send(req.body);
 });
 
 router.put("/chat/api/messages/:ts", function (req, res, next) {
 	//TODO: actualizar un mensaje
-	if (messagelist.has(msgts)) {
-		res.render("singleMessage", { msg: messagelist.get(msgts) });
+	let ts = req.params.ts;
+	let msgObj = req.body;
+	if (messagelist.has(ts)) {
+		messagelist.set(ts, msgObj);
+		saveMessage(req.body);
+		res.status(200).send(req.body);
 	} else {
 		res.status(404).send("mensaje no encontrado");
 	}
@@ -61,11 +70,12 @@ function loadFiles() {
 		}
 	});
 }
-
+loadFiles();
 function saveMessage(message /* en JSON */) {
+	messagelist.set(message.ts, message);
 	let dirpath = "./messages/";
-	let filename = message.ts;
-	fs.writeFileSync(dirpath + filename, message);
+	let filename = message.ts + ".json";
+	fs.writeFileSync(dirpath + filename, JSON.stringify(message));
 }
 
 module.exports = router;
