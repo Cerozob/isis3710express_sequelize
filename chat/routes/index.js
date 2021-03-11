@@ -4,6 +4,15 @@ const fs = require("fs");
 const messagelist = new Map(); //clave: timestamp, valor: objeto mensaje
 const ejs = require("ejs");
 const joi = require("joi");
+const sequelize = require("./lib/sequelize");
+const Joi = require("joi");
+
+const schema = Joi.object({
+	author: Joi.string().pattern(new RegExp("^[a-zA-Z] ^[a-zA-Z]")).required(),
+
+	message: Joi.min(3).required(),
+	ts: Joi.required(),
+});
 
 const loadFiles = async () => {
 	let dirpath = "./messages";
@@ -58,6 +67,7 @@ router.get("/chat/api/messages/:ts", function (req, res, next) {
 
 router.post("/chat/api/messages", function (req, res, next) {
 	//TODO: crear un mensaje
+	let { error, value } = schema.validate(req.body);
 	saveMessage(req.body);
 	res.status(200).send(req.body);
 });
