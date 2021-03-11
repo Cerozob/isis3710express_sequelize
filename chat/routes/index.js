@@ -1,31 +1,56 @@
 var express = require("express");
 var router = express.Router();
 const fs = require("fs");
-var messagelist = new Map(); //clave: timestamp, valor: objeto mensaje
-const htmlsPath = "./public/";
+const messagelist = new Map(); //clave: timestamp, valor: objeto mensaje
 const ejs = require("ejs");
 const joi = require("joi");
 
+const loadFiles = async () => {
+	let dirpath = "./messages";
+	fs.readdir(dirpath, function (err, files) {
+		if (err) {
+			console.log("error reading directory: " + err);
+		} else {
+			files.forEach((item) => {
+				// la idea es cargar mensajes JSON guardados en /messages
+				let filepath = dirpath + "/" + item;
+				let content = fs.readFile(
+					filepath,
+					{ encoding: "utf8" },
+					(err, data) => {
+						if (err) {
+							console.log("error reading directory: " + err);
+						} else {
+							if (data) {
+								loadMessage(JSON.parse(data));
+							}
+						}
+					}
+				);
+			});
+		}
+	});
+};
+loadFiles();
+
 /* GET home page. */
 router.get("/", function (req, res, next) {
-	res.render(ejs.render(htmlsPath + "index"));
+	res.render(ejs.render("index"));
 });
 
 router.get("/chat/api/messages", function (req, res, next) {
-	//TODO: mostrar todos los mensajes
-	if (messagelist.size !== 0) {
-		loadFiles();
-	}
 	/* uso ejs porque si no me lanzaba error de que no hay motor de plantillas, tampoco supe mandar parametros sin ejs, sorry*/
-	let html = ejs.render(htmlspath + "messages", { messages: messagelist });
-	res.render(html);
+	loadFiles().then(() => {
+		res.status(200).render("messages", { messages: messagelist });
+	});
+	/* tampoco entendí como enviar el html Y los mensajes al tiempo distinguiendo ambos GET dentro del websocket */
 });
 
 router.get("/chat/api/messages/:ts", function (req, res, next) {
 	//TODO: mostrar el mensaje con el timestamp req.params.ts
-	let msgts = req.params.ts;
+	let msgts = parseInt(req.params.ts);
 	if (messagelist.has(msgts)) {
-		res.send(JSON.stringify(messagelist.get(msgts)));
+		res.render("singleMessage", { message: messagelist.get(msgts) });
 	} else {
 		res.status(404).send("mensaje no encontrado");
 	}
@@ -39,7 +64,7 @@ router.post("/chat/api/messages", function (req, res, next) {
 
 router.put("/chat/api/messages/:ts", function (req, res, next) {
 	//TODO: actualizar un mensaje
-	let ts = req.params.ts;
+	let ts = parseInt(req.params.ts);
 	let msgObj = req.body;
 	if (messagelist.has(ts)) {
 		messagelist.set(ts, msgObj);
@@ -51,7 +76,7 @@ router.put("/chat/api/messages/:ts", function (req, res, next) {
 });
 
 router.delete("/chat/api/messages/:ts", function (req, res, next) {
-	let ts = req.params.ts;
+	let ts = parseInt(req.params.ts);
 	if (messagelist.has(ts)) {
 		messagelist.delete(ts);
 		deleteMessage(ts);
@@ -61,30 +86,10 @@ router.delete("/chat/api/messages/:ts", function (req, res, next) {
 	}
 });
 
-function loadMessage(data) {
-	message = JSON.parse(data);
+function loadMessage(message) {
 	messagelist.set(message.ts, message);
 	return message;
 }
-
-function loadFiles() {
-	let dirpath = "./messages";
-	fs.readdirSync(dirpath, function (err, files) {
-		if (err) {
-			console.log("error reading directory: " + err);
-		} else {
-			files.forEach((item) => {
-				// la idea es cargar mensajes JSON guardados en /messages
-				let filepath = dirpath + "/" + item;
-				let content = fs.readFileSync(filepath, { encoding: "utf8" }, () => {
-					/*por que solo funciona así?, no sé*/
-				});
-				loadMessage(content);
-			});
-		}
-	});
-}
-loadFiles();
 
 function saveMessage(message /* en JSON */) {
 	/* no se podrían crear mensajes al mismo milisegundos*/

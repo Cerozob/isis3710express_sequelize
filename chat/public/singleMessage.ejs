@@ -9,9 +9,15 @@
 
 <body>
     <h1>Viendo un mensaje</h1>
-    <h2 id="author"></h2>
-    <h3 id="timestamp"></h3>
-    <p id="message"></p>
+    <h2 id="author">
+        <%= message.author %>
+    </h2>
+    <h3 id="timestamp">
+        <%= message.ts %>
+    </h3>
+    <p id="message">
+        <%= message.message %>
+    </p>
     <script src="./javascripts/message.js"></script>
 </body>
 

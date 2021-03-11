@@ -1,16 +1,6 @@
 const ws = new WebSocket("ws://localhost:3000");
 
-ws.onmessage = (msg) => {
-	renderMessages(JSON.parse(msg.data));
-};
-
-const renderMessages = (data) => {
-	const html = data
-		.map((item) => `<p>[${item.ts}] ${item.author}: ${item.message}</p>`)
-		.join(" ");
-	document.getElementById("messages").innerHTML = html;
-};
-
+/* no entendi el websocket */
 const handleSubmit = (evt) => {
 	evt.preventDefault();
 	const message = document.getElementById("message");

@@ -10,7 +10,12 @@
 
 <body>
     <h1>Mensajes</h1>
-    <div id="messages"></div>
+    <div id="messages">
+        <% messages.forEach( (item)=>{ %>
+            <p>[<%= item.ts %>] <%=item.author%>: <%=item.message%>
+            </p>
+            <% }); %>
+    </div>
     <form id="form" method="post">
         <label for="author">Author
             <input type="text" id="author" />
