@@ -3,11 +3,12 @@ var router = express.Router();
 const fs = require("fs");
 var messagelist = new Map(); //clave: timestamp, valor: objeto mensaje
 const htmlsPath = "./public/";
-const path = require("path");
+const ejs = require("ejs");
+const joi = require("joi");
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-	res.render(htmlsPath + "index");
+	res.render(ejs.render(htmlsPath + "index"));
 });
 
 router.get("/chat/api/messages", function (req, res, next) {
@@ -15,7 +16,9 @@ router.get("/chat/api/messages", function (req, res, next) {
 	if (messagelist.size !== 0) {
 		loadFiles();
 	}
-	res.sendFile(path.resolve(__dirname, "../public/messages.html"));
+	/* uso ejs porque si no me lanzaba error de que no hay motor de plantillas, tampoco supe mandar parametros sin ejs, sorry*/
+	let html = ejs.render(htmlspath + "messages", { messages: messagelist });
+	res.render(html);
 });
 
 router.get("/chat/api/messages/:ts", function (req, res, next) {
@@ -47,6 +50,17 @@ router.put("/chat/api/messages/:ts", function (req, res, next) {
 	}
 });
 
+router.delete("/chat/api/messages/:ts", function (req, res, next) {
+	let ts = req.params.ts;
+	if (messagelist.has(ts)) {
+		messagelist.delete(ts);
+		deleteMessage(ts);
+		res.status(200).send("eliminado correctamente");
+	} else {
+		res.status(404).send("mensaje no encontrado");
+	}
+});
+
 function loadMessage(data) {
 	message = JSON.parse(data);
 	messagelist.set(message.ts, message);
@@ -55,7 +69,7 @@ function loadMessage(data) {
 
 function loadFiles() {
 	let dirpath = "./messages";
-	fs.readdir(dirpath, function (err, files) {
+	fs.readdirSync(dirpath, function (err, files) {
 		if (err) {
 			console.log("error reading directory: " + err);
 		} else {
@@ -71,11 +85,19 @@ function loadFiles() {
 	});
 }
 loadFiles();
+
 function saveMessage(message /* en JSON */) {
+	/* no se podrían crear mensajes al mismo milisegundos*/
 	messagelist.set(message.ts, message);
 	let dirpath = "./messages/";
 	let filename = message.ts + ".json";
-	fs.writeFileSync(dirpath + filename, JSON.stringify(message));
+	fs.writeFile(dirpath + filename, JSON.stringify(message));
+}
+
+function deleteMessage(message /* timestamp del mensaje */) {
+	let dirpath = "./messages/";
+	let filename = message + ".json";
+	fs.unlink(dirpath + filename);
 }
 
 module.exports = router;
